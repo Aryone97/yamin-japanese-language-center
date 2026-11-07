@@ -180,6 +180,8 @@ const sets = d.booksImages
       description: 'Books and online video class materials'
     }))
   : classImages[c.level] || [];
+
+  
   
 return <><section className={'detail-hero tone-'+c.tone}><div className="shell"><Link to="/courses" className="back-link"><ArrowLeft size={17}/>{t.back}</Link><div className="detail-hero-content"><div><Eyebrow>YAMIN / CLASS INFORMATION</Eyebrow><h1>{c.level}<span>.</span></h1><p className="detail-jl">JLPT {c.level} · သင်ရိုးအသေးစိတ်</p><p className="detail-intro">Ready Complete အတန်း၊ တစ်ပိုင်းချင်းအတန်းများနှင့် Video Exam Practice များကို အောက်တွင် ကြည့်ရှုနိုင်ပါသည်။</p><a href="#course-information" className="btn btn-dark">Class information <ArrowRight size={17}/></a></div><div className="detail-symbol" aria-hidden="true">{c.level==='N5'?'あ':c.level==='N4'?'日':c.level==='N3'?'語':'夢'}</div></div></div></section><section className="class-details-section section" id="course-information"><div className="shell class-layout"><div className="class-main"><Eyebrow>COURSE OPTIONS</Eyebrow><h2 className="section-title">{c.level} Class Information</h2><div className="class-quicknav"><a href="#complete">Ready Complete</a><a href="#individual">တစ်ပိုင်းချင်း</a><a href="#exam">JLPT Old Questions</a><a href="#rules">စည်းကမ်းချက်များ</a><a href="#payment">Payment</a></div><CourseDeliveryBlock delivery={d.delivery} level={c.level}/>{d.explanation&&<div className="course-highlight n4-explanation"><strong>N4 သင်ရိုးရှင်းလင်းချက်</strong><p>{d.explanation}</p></div>}<section className="class-group" id="complete"><div className="card-heading"><span>01 / FULL COURSES</span><h2>သင်ရိုးနှင့် သင်တန်းကြေးအသေးစိတ်</h2></div>{d.packages.map((item,i)=><React.Fragment key={i}><PackageBlock data={item} accent/>{c.level==='N4'&&
 <RequiredBooksBlock data={{ booksTitle: i === 0
@@ -188,11 +190,30 @@ return <><section className={'detail-hero tone-'+c.tone}><div className="shell">
 booksNotice:'သင်တန်းကြေးတွင် ဖတ်စာအုပ်ဖိုးမပါသောကြောင့် စာအုပ်၊ PDF files မပေးပါ။ သီးသန့်ထပ်ဝယ်ရပါမည်။'}} items={[sets[i]]}  id={i===0?'books-challenge':'books-minna'}/>}</React.Fragment>)}{c.level!=='N4'&&
 <RequiredBooksBlock data={d} items={sets} heading={`${c.level} Online Set`}/>}</section><section className="class-group" id="individual"><div className="card-heading"><span>02 / CHOOSE A MODULE</span><h2>{c.level} Level အတွက် တစ်ပိုင်းချင်းရွေးတက်နိုင်သောအတန်းများ</h2></div>{d.bundles?.map((x,i)=><PackageBlock data={x} key={i}/>)}<div className="module-list">{d.individual.map(([title,price],i)=><div className="module-row" key={i}><span className="module-index">{String(i+1).padStart(2,'0')}</span><strong>{title}</strong><Money value={price}/></div>)}</div>{d.individualNote&&<p className="course-highlight">{d.individualNote}</p>}<p className="course-mini-note">{shared.video}</p></section><section className="class-group" id="exam"><div className="card-heading"><span>03 / VIDEO LESSONS</span><h2>JLPT Old Question Video Classes</h2></div><div className="exam-grid">{d.exams.map((exam,i)=><article className="exam-card" key={i}><span className="video-label">VIDEO CLASS</span><h3>{exam.title}</h3><Money value={exam.price}/><div className="exam-years"><span>သင်ကြားမည့် ခုနှစ်များ</span><p>{exam.years}</p></div><p>{shared.oldQuestion}</p><p className="course-mini-note">{shared.noFiles}</p></article>)}</div></section><RulesBlock/><PaymentBlock/></div><aside className="class-side"><div className="class-side-inner"><span className="mini-kicker">JLPT {c.level}</span><h3>Find your class</h3><p>သင်တန်းအမျိုးအစား၊ သင်တန်းကြေးနှင့် စည်းကမ်းချက်များကို ဖတ်ရှုပြီးမှ အပ်နှံပါ။</p><div className="side-price"><small>Ready Complete from</small><Money value={Math.min(...d.packages.map(x=>x.price))}/></div><Link to={'/contact?course='+c.level} className="btn btn-dark">{t.inquire}<ArrowUpRight size={17}/></Link><a className="side-text-link" href="#payment">KBZPay / WavePay payment information ↓</a></div></aside></div></section></>}
 function BookCover({book}){const [broken,setBroken]=useState(false);return book.image&&!broken?<img className="book-cover" src={book.image} alt={book.title} loading="lazy" onError={()=>setBroken(true)}/>:<div className="book-art"><BookOpen size={65}/><span>IMAGE PLACEHOLDER</span></div>}
-function Bookshop(){
+
+
+function Bookshop(){ 
  const {t}=useLanguage();
  const [filter,setFilter]=useState('All');
  const [selected,setSelected]=useState(null);
- const visible=shop.books.filter(b=>filter==='All'||b.level===filter);
+ const visible = shop.books.filter(book => {
+  if (filter === 'All') return true;
+
+  if (filter === 'N4-Challenge') {
+    return book.level === 'N4' &&
+      (book.set === 'Challenge' || book.sets?.includes('Challenge'));
+  }
+
+  if (filter === 'N4-Minna') {
+    return book.level === 'N4' &&
+      (book.set === 'Minna' || book.sets?.includes('Minna'));
+  }
+
+  return book.level === filter;
+});
+
+
+ 
  useEffect(()=>{if(!selected)return;const onKey=e=>{if(e.key==='Escape')setSelected(null)};document.addEventListener('keydown',onKey);return()=>document.removeEventListener('keydown',onKey)},[selected]);
  return <><PageHeading eyebrow="YAMIN BOOKSHOP" title={t.bookshop||'Bookshop'} body="စာအုပ်များ၊ လိပ်စာနှင့် ဆက်သွယ်ရန်အချက်အလက်များ" side="本"/>
  <section className="section"><div className="shell">
@@ -257,9 +278,27 @@ function Bookshop(){
 
 </div>
 
+<div className="book-filters" role="group" aria-label="Filter books by JLPT level">
+  {[
+    { value: 'All', label: 'All books' },
+    { value: 'N5', label: 'JLPT N5' },
+    { value: 'N4-Challenge', label: 'N4 Challenge Set' },
+    { value: 'N4-Minna', label: 'N4 Minna Set' },
+    { value: 'N3', label: 'JLPT N3' },
+    { value: 'N2', label: 'JLPT N2' }
+  ].map(item => (
+    <button
+      key={item.value}
+      type="button"
+      className={'book-filter ' + (filter === item.value ? 'active' : '')}
+      aria-pressed={filter === item.value}
+      onClick={() => setFilter(item.value)}
+    >
+      {item.label}
+    </button>
+  ))}
+</div>
 
- <div className="book-filters" role="group" aria-label="Filter books by JLPT level">{['All','N5','N4','N3','N2'].map(v=><button key={v} type="button" className={'book-filter '+(filter===v?'active':'')} aria-pressed={filter===v} onClick={()=>setFilter(v)}>{v==='All'?'All books':v==='Coming soon'?'Coming soon':`JLPT ${v}`}</button>)}</div>
- 
  <div className="books-grid">{visible.map(book=><article key={book.id} className="book-card">
  <button type="button" className="book-image-button" onClick={()=>book.image&&setSelected(book)} disabled={!book.image} aria-label={book.image?`Enlarge ${book.title}`:`Image not yet available for ${book.title}`}><BookCover book={book}/>{book.image&&<span className="book-zoom"><BookOpen size={14}/> View cover</span>}</button>
  <div className="book-body"><span className="book-level">{book.level==='Coming soon'?'COMING SOON':`JLPT ${book.level}`}</span><h3>{book.title}</h3><p>{book.description}</p><strong>{book.price?book.price.toLocaleString('en-US')+' ကျပ်':book.available?'ဈေးနှုန်း ဆက်သွယ်မေးမြန်းရန်':'စာအုပ်အချက်အလက် ထပ်ထည့်ရန်'}</strong></div>
